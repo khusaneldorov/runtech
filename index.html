@@ -213,7 +213,7 @@
             const offlineOverlay = document.getElementById('offline-mode');
             if (navigator.onLine) {
                 status.innerText = "ONLINE";
-                status.style.borderColor = var(--accent-blue);
+               status.style.borderColor = "#00f2ff";
                 offlineOverlay.style.display = 'none';
             } else {
                 status.innerText = "OFFLINE";
@@ -228,17 +228,28 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network error');
-                const csvText = await response.text();
+                const csvText = await const response = await fetch(url);
+
+if (!response.ok) {
+    throw new Error("Ошибка загрузки CSV");
+}
+
+const csvText = await response.text();
+
+// проверка что это реально CSV
+if (!csvText || !csvText.includes(',')) {
+    throw new Error("Неверный формат данных (не CSV)");
+} response.text();
                 const data = parseCSV(csvText);
                 renderCharts(data);
             } catch (err) {
-                console.error("Data error:", err);
+                console.error("DATA ERROR:", err);
                 renderCharts([]); // Если ошибка — рисуем пустые (нули)
             }
         }
 
         function parseCSV(csv) {
-            const lines = csv.split('\n').slice(1); // Удаляем заголовок
+            const lines = csv.trim().split('\n').slice(1); // Удаляем заголовок
             return lines.map(line => {
                 const cols = line.split(',');
                 if (cols.length < 5) return null;
@@ -255,7 +266,16 @@
 
         function renderCharts(data) {
             // Генерируем полный массив дней месяца на основе первой даты в данных
-            const baseDate = data.length > 0 ? new Date(data[0].date) : new Date();
+           function parseDate(str) {
+    const parts = str.split('.');
+    return new Date(parts[2], parts[1] - 1, parts[0]);
+}
+
+if (data.length === 0) {
+    return; // просто выходим, не рисуем ничего
+}
+
+const baseDate = new Date(data[0].date);
             const year = baseDate.getFullYear();
             const month = baseDate.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -270,7 +290,7 @@
             };
 
             data.forEach(item => {
-                const d = new Date(item.date).getDate();
+               const d = parseDate(item.date).getDate();
                 if (d <= daysInMonth) {
                     processedData.calories[d-1] = item.calories;
                     processedData.distance[d-1] = item.distance;
