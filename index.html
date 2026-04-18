@@ -231,10 +231,10 @@
         throw new Error("Ошибка загрузки CSV");
     }
 
-    const csvBuffer = await response.arrayBuffer();
-    const csvText = new TextDecoder('utf-8').decode(csvBuffer);
+    const csvText = await response.text();
 
-    const data = parseCSV(csvText);
+   console.log(csvText);
+const data = parseCSV(csvText);
     renderCharts(data);
 
 } catch (err) {
@@ -247,36 +247,40 @@
             const lines = csv
   .split('\n')
   .map(l => l.trim())
-  .filter(l => l && l.includes(',')); // Удаляем заголовок
+  .filter(l => l.trim() !== '') // Удаляем заголовок
             return lines.map(line => {
                 const cols = line.split(',');
                 
-                if (!/^\d{2}\.\d{2}\.\d{4}/.test(cols[0])) return null;
+               if (!cols[0] || !cols[0].includes('.')) return null;
                 if (cols.length < 5) return null;
-                return {
-                    date: cols[0].trim(),
-                    calories: parseFloat(cols[1]) || 0,
-                    distance: parseFloat(cols[2]) || 0,
-                    steps: parseFloat(cols[3]) || 0,
-                   fat: parseFloat(cols[4].replace(',', '.')) || 0,
-                    console.log(csvText);
-                };
+               return {
+    date: cols[0].trim(),
+    calories: parseFloat(cols[1]) || 0,
+    distance: parseFloat(cols[2]) || 0,
+    steps: parseFloat(cols[3]) || 0,
+    fat: parseFloat(cols[4].replace(',', '.')) || 0
+};
             }).filter(item => item !== null);
         }
 
-        function parseDate(str) {
-    const parts = str.split('.');
-    return new Date(parts[2], parts[1] - 1, parts[0]);
-}
+        function renderCharts(data) {
 
-if (data.length === 0) {
-    return; // просто выходим, не рисуем ничего
-}
+    function parseDate(str) {
+        const parts = str.split('.');
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
 
-const baseDate = parseDate(data[0].date);
-            const year = baseDate.getFullYear();
-            const month = baseDate.getMonth();
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
+    if (data.length === 0) {
+        return;
+    }
+
+    const baseDate = parseDate(data[0].date);
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    // дальше твои графики...
+}
             
             const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
             
@@ -288,7 +292,10 @@ const baseDate = parseDate(data[0].date);
             };
 
             data.forEach(item => {
-               const d = parseDate(item.date).getDate();
+              const parsed = parseDate(item.date);
+if (isNaN(parsed)) return;
+
+const d = parsed.getDate();
                 if (d <= daysInMonth) {
                     processedData.calories[d-1] = item.calories;
                     processedData.distance[d-1] = item.distance;
@@ -298,7 +305,18 @@ const baseDate = parseDate(data[0].date);
             });
 
             // Обновляем статистику в хедерах (последний день)
-            const lastVal = data[data.length - 1] || {calories:0, distance:0, steps:0, fat:0};
+            let lastVal = null;
+
+for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i] && data[i].calories !== undefined) {
+        lastVal = data[i];
+        break;
+    }
+}
+
+if (!lastVal) {
+    lastVal = {calories:0, distance:0, steps:0, fat:0};
+}
             document.getElementById('val-cal').innerText = `${lastVal.calories} kcal`;
             document.getElementById('val-dist').innerText = `${lastVal.distance} km`;
             document.getElementById('val-steps').innerText = `${lastVal.steps} steps`;
