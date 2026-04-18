@@ -224,40 +224,41 @@
         async function loadMonth(gid) {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
             
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Network error');
-                const response = await fetch(url);
+           try {
+    const response = await fetch(url);
 
-if (!response.ok) {
-    throw new Error("Ошибка загрузки CSV");
+    if (!response.ok) {
+        throw new Error("Ошибка загрузки CSV");
+    }
+
+    const csvBuffer = await response.arrayBuffer();
+    const csvText = new TextDecoder('utf-8').decode(csvBuffer);
+
+    const data = parseCSV(csvText);
+    renderCharts(data);
+
+} catch (err) {
+    console.error("DATA ERROR:", err);
+    renderCharts([]);
 }
-
-const csvText = await response.text();
-
-if (!csvText || !csvText.includes(',')) {
-    throw new Error("Неверный формат данных (не CSV)");
-}
-                const data = parseCSV(csvText);
-                renderCharts(data);
-            } catch (err) {
-                console.error("DATA ERROR:", err);
-                renderCharts([]); // Если ошибка — рисуем пустые (нули)
-            }
         }
 
         function parseCSV(csv) {
-            const lines = csv.trim().split('\n').slice(1); // Удаляем заголовок
+            const lines = csv
+  .split('\n')
+  .map(l => l.trim())
+  .filter(l => l && l.includes(',')); // Удаляем заголовок
             return lines.map(line => {
                 const cols = line.split(',');
-                if (cols.length < 5) return null;
                 
+                if (!/^\d{2}\.\d{2}\.\d{4}/.test(cols[0])) return null;
+                if (cols.length < 5) return null;
                 return {
                     date: cols[0].trim(),
                     calories: parseFloat(cols[1]) || 0,
                     distance: parseFloat(cols[2]) || 0,
                     steps: parseFloat(cols[3]) || 0,
-                    fat: parseFloat(cols[4].replace(',', '.').replace(/"/g, '')) || 0
+                   fat: parseFloat(cols[4].replace(',', '.')) || 0,
                     console.log(csvText);
                 };
             }).filter(item => item !== null);
