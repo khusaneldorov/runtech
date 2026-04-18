@@ -171,9 +171,8 @@
         // Названия листов (месяцев) и их GID. В реальной системе GID нужно знать заранее.
         // По умолчанию Google Sheets создает первый лист с gid=0.
         const MONTHS_CONFIG = [
-            { name: 'Январь', gid: '0' },
-            { name: 'Февраль', gid: '417382218' }, // Пример GID, замените на ваши
-            { name: 'Март', gid: '123456789' }    // Пример GID
+            { name: 'Март', gid: '0' },
+             
         ];
 
         let currentCharts = {};
@@ -228,7 +227,7 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network error');
-                const csvText = await const response = await fetch(url);
+                const response = await fetch(url);
 
 if (!response.ok) {
     throw new Error("Ошибка загрузки CSV");
@@ -236,10 +235,9 @@ if (!response.ok) {
 
 const csvText = await response.text();
 
-// проверка что это реально CSV
 if (!csvText || !csvText.includes(',')) {
     throw new Error("Неверный формат данных (не CSV)");
-} response.text();
+}
                 const data = parseCSV(csvText);
                 renderCharts(data);
             } catch (err) {
@@ -264,9 +262,7 @@ if (!csvText || !csvText.includes(',')) {
             }).filter(item => item !== null);
         }
 
-        function renderCharts(data) {
-            // Генерируем полный массив дней месяца на основе первой даты в данных
-           function parseDate(str) {
+        function parseDate(str) {
     const parts = str.split('.');
     return new Date(parts[2], parts[1] - 1, parts[0]);
 }
@@ -275,7 +271,7 @@ if (data.length === 0) {
     return; // просто выходим, не рисуем ничего
 }
 
-const baseDate = new Date(data[0].date);
+const baseDate = parseDate(data[0].date);
             const year = baseDate.getFullYear();
             const month = baseDate.getMonth();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
