@@ -162,7 +162,7 @@
         </div>
     </main>
 
-    <nav class="tabs-container" id="monthTabs">
+    <nav class="tabs-container" id="0">
         <!-- Вкладки месяцев будут генерироваться здесь -->
     </nav>
 
@@ -244,24 +244,23 @@ const data = parseCSV(csvText);
         }
 
         function parseCSV(csv) {
-            const lines = csv
-  .split('\n')
-  .map(l => l.trim())
-  .filter(l => l.trim() !== '') // Удаляем заголовок
-            return lines.map(line => {
-                const cols = line.split(',');
-                
-               if (!cols[0] || !cols[0].includes('.')) return null;
-                if (cols.length < 5) return null;
-               return {
-    date: cols[0].trim(),
-    calories: parseFloat(cols[1]) || 0,
-    distance: parseFloat(cols[2]) || 0,
-    steps: parseFloat(cols[3]) || 0,
-    fat: parseFloat(cols[4].replace(',', '.')) || 0
-};
-            }).filter(item => item !== null);
-        }
+    const lines = csv
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => /^\d{2}\.\d{2}\.\d{4}/.test(l)); // ТОЛЬКО ДАТЫ
+
+    return lines.map(line => {
+        const cols = line.split(',');
+
+        return {
+            date: cols[0],
+            calories: parseFloat(cols[1]) || 0,
+            distance: parseFloat(cols[2]) || 0,
+            steps: parseFloat(cols[3]) || 0,
+            fat: parseFloat(cols[4]) || 0
+        };
+    });
+}
 
         function renderCharts(data) {
 
