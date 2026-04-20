@@ -233,7 +233,7 @@
 
     const csvText = await response.text();
 
-   console.log(csvText);
+   
 const data = parseCSV(csvText);
     renderCharts(data);
 
@@ -263,6 +263,15 @@ const data = parseCSV(csvText);
 }
 
         function renderCharts(data) {
+
+    if (data.length === 0) {
+        return;
+    }
+
+    const baseDate = parseDate(data[0].date);
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     function parseDate(str) {
         const parts = str.split('.');
