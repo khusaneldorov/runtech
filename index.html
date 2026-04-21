@@ -223,7 +223,7 @@
 
         async function loadMonth(gid) {
     
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;   
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`;
 
     try {
     const response = await fetch(url);
@@ -269,10 +269,7 @@ if (!/^\d{2}\.\d{2}\.\d{4}/.test(cols[0])) return null;
         return;
     }
 
-    const baseDate = parseDate(data[0].date);
-    const year = baseDate.getFullYear();
-    const month = baseDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+   
 
     function parseDate(str) {
         const parts = str.split('.');
