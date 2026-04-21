@@ -226,16 +226,16 @@
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;   
 
     try {
-        const response = await fetch(url);
+    const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error("Ошибка загрузки CSV");
     }
 
-    const csvText = await response.text();
+    const csvBuffer = await response.arrayBuffer();
+    const csvText = new TextDecoder('utf-8').decode(csvBuffer);
 
-   
-const data = parseCSV(csvText);
+    const data = parseCSV(csvText);
     renderCharts(data);
 
 } catch (err) {
@@ -252,7 +252,7 @@ const data = parseCSV(csvText);
 
     return lines.map(line => {
         const cols = line.split(',');
-
+if (!/^\d{2}\.\d{2}\.\d{4}/.test(cols[0])) return null;
         return {
             date: cols[0],
             calories: parseFloat(cols[1]) || 0,
