@@ -223,10 +223,10 @@
 
         async function loadMonth(gid) {
 
-    console.log("GID:", gid);       
-    const url = https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid};
+    console.log("GID:", gid);        // 👈 ВОТ СЮДА
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 
-    console.log("URL:", url);        
+    console.log("URL:", url);        // 👈 И ЭТО СРАЗУ ДОБАВЬ
 
     try {
         const response = await fetch(url);
