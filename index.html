@@ -189,7 +189,7 @@
             createTabs();
             window.addEventListener('online', updateStatus);
             window.addEventListener('offline', updateStatus);
-            loadMonth('0');
+          loadMonth(MONTHS_CONFIG[0].gid);
         }
 
         function createTabs() {
@@ -222,11 +222,8 @@
         }
 
         async function loadMonth(gid) {
-
-    console.log("GID:", gid);        // 👈 ВОТ СЮДА
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
-
-    console.log("URL:", url);        // 👈 И ЭТО СРАЗУ ДОБАВЬ
+    
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;   
 
     try {
         const response = await fetch(url);
