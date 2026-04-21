@@ -222,7 +222,7 @@
         }
 
         async function loadMonth(gid) {
-            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
             
            try {
     const response = await fetch(url);
