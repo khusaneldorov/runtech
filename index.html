@@ -223,7 +223,7 @@
 
         async function loadMonth(gid) {
     
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid};
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}
 
     try {
     const response = await fetch(url);
@@ -232,10 +232,12 @@
         throw new Error("Ошибка загрузки CSV");
     }
 
-    const csvBuffer = await response.arrayBuffer();
-    const csvText = new TextDecoder('utf-8').decode(csvBuffer);
-
-    const data = parseCSV(csvText);
+    const text = await response.text();
+    
+    const jsonStart = text.indexOf('{');
+const jsonEnd = text.lastIndexOf('}');
+const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
+const data = parseGviz(json);
     renderCharts(data);
 
 } catch (err) {
@@ -244,23 +246,31 @@
 }
         }
 
-        function parseCSV(csv) {
-    const lines = csv
-        .split('\n')
-        .map(l => l.trim())
-        .filter(l => /^\d{2}\.\d{2}\.\d{4}/.test(l)); // ТОЛЬКО ДАТЫ
-
-    return lines.map(line => {
-        const cols = line.split(',');
-if (!/^\d{2}\.\d{2}\.\d{4}/.test(cols[0])) return null;
-        return {
-            date: cols[0],
-            calories: parseFloat(cols[1]) || 0,
-            distance: parseFloat(cols[2]) || 0,
-            steps: parseFloat(cols[3]) || 0,
-           fat: parseFloat((cols[4]  '').replace(/"/g, '').replace(',', '.'))  0
-        };
+        function parseGviz(json) {
+    const rows = json.table.rows;
+    const result = [];
+    rows.forEach(row => {
+        const c = row.c;
+        if (!c  !c[0]  !c[0].v) return;
+        const dateVal = c[0].v;
+        let dateStr = '';
+        if (typeof dateVal === 'string' && dateVal.startsWith('Date(')) {
+            const parts = dateVal.replace('Date(','').replace(')','').split(',');
+            const d = String(parts[2]).padStart(2,'0');
+            const m = String(parseInt(parts[1])+1).padStart(2,'0');
+            dateStr = '${d}.${m}.${parts[0]}';
+        } else {
+            dateStr = dateVal;
+        }
+        result.push({
+            date: dateStr,
+            calories: c[1] ? (c[1].v || 0) : 0,
+            distance: c[2] ? (c[2].v || 0) : 0,
+            steps:    c[3] ? (c[3].v || 0) : 0,
+            fat:      c[4] ? (c[4].v || 0) : 0
+        });
     });
+    return result;
 }
 
         function renderCharts(data) {
