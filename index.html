@@ -167,12 +167,43 @@
     </nav>
 
     <script>
-        const SHEET_ID = '1qNgrcrzRPC6u13_wI8a0kI3uK8ZvYZBds5aBOtiXRIM';
-        // Названия листов (месяцев) и их GID. В реальной системе GID нужно знать заранее.
-        // По умолчанию Google Sheets создает первый лист с gid=0.
         const MONTHS_CONFIG = [
-            { name: 'Март', gid: '0' },
-             
+            {
+                name: 'Март',
+                data: [
+                    { date: '01.03.2026', calories: 553, distance: 5, steps: 8868,  fat: 72 },
+                    { date: '02.03.2026', calories: 544, distance: 7, steps: 13162, fat: 71 },
+                    { date: '03.03.2026', calories: 484, distance: 7, steps: 11785, fat: 63 },
+                    { date: '04.03.2026', calories: 505, distance: 7, steps: 12311, fat: 66 },
+                    { date: '05.03.2026', calories: 401, distance: 5, steps: 9764,  fat: 52 },
+                    { date: '06.03.2026', calories: 469, distance: 6, steps: 11396, fat: 61 },
+                    { date: '07.03.2026', calories: 506, distance: 7, steps: 12078, fat: 66 },
+                    { date: '08.03.2026', calories: 664, distance: 9, steps: 16419, fat: 86 },
+                    { date: '09.03.2026', calories: 372, distance: 5, steps: 9000,  fat: 48 },
+                    { date: '10.03.2026', calories: 482, distance: 7, steps: 11709, fat: 63 },
+                    { date: '11.03.2026', calories: 0,   distance: 0, steps: 2,     fat: 0  },
+                    { date: '12.03.2026', calories: 370, distance: 5, steps: 9070,  fat: 48 },
+                    { date: '13.03.2026', calories: 585, distance: 8, steps: 14088, fat: 76 },
+                    { date: '14.03.2026', calories: 731, distance: 10,steps: 17974, fat: 95 },
+                    { date: '15.03.2026', calories: 535, distance: 7, steps: 13068, fat: 70 },
+                    { date: '16.03.2026', calories: 586, distance: 8, steps: 142,   fat: 76 },
+                    { date: '17.03.2026', calories: 442, distance: 6, steps: 10880, fat: 57 },
+                    { date: '18.03.2026', calories: 573, distance: 8, steps: 14025, fat: 74 },
+                    { date: '19.03.2026', calories: 568, distance: 8, steps: 13876, fat: 74 },
+                    { date: '20.03.2026', calories: 530, distance: 7, steps: 12979, fat: 69 },
+                    { date: '21.03.2026', calories: 393, distance: 5, steps: 9645,  fat: 51 },
+                    { date: '22.03.2026', calories: 616, distance: 9, steps: 15135, fat: 80 },
+                    { date: '23.03.2026', calories: 518, distance: 7, steps: 12684, fat: 67 },
+                    { date: '24.03.2026', calories: 363, distance: 5, steps: 8885,  fat: 47 },
+                    { date: '25.03.2026', calories: 488, distance: 7, steps: 11880, fat: 63 },
+                    { date: '26.03.2026', calories: 375, distance: 5, steps: 9175,  fat: 49 },
+                    { date: '27.03.2026', calories: 642, distance: 9, steps: 15680, fat: 83 },
+                    { date: '28.03.2026', calories: 463, distance: 6, steps: 11344, fat: 60 },
+                    { date: '29.03.2026', calories: 428, distance: 6, steps: 10304, fat: 56 },
+                    { date: '30.03.2026', calories: 528, distance: 7, steps: 12887, fat: 69 },
+                    { date: '31.03.2026', calories: 577, distance: 8, steps: 14163, fat: 75 },
+                ]
+            }
         ];
 
         let currentCharts = {};
@@ -189,7 +220,7 @@
             createTabs();
             window.addEventListener('online', updateStatus);
             window.addEventListener('offline', updateStatus);
-          loadMonth(MONTHS_CONFIG[0].gid);
+            loadMonth(0);
         }
 
         function createTabs() {
@@ -201,7 +232,7 @@
                 btn.onclick = (e) => {
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                     e.target.classList.add('active');
-                    loadMonth(m.gid);
+                    loadMonth(index);
                 };
                 container.appendChild(btn);
             });
@@ -221,57 +252,10 @@
             }
         }
 
-        async function loadMonth(gid) {
-    
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}
-
-    try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-        throw new Error("Ошибка загрузки CSV");
-    }
-
-    const text = await response.text();
-    
-    const jsonStart = text.indexOf('{');
-const jsonEnd = text.lastIndexOf('}');
-const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
-const data = parseGviz(json);
-    renderCharts(data);
-
-} catch (err) {
-    console.error("DATA ERROR:", err);
-    renderCharts([]);
-}
+        async function loadMonth(index) {
+            const monthData = MONTHS_CONFIG[index];
+            if (monthData) renderCharts(monthData.data);
         }
-
-        function parseGviz(json) {
-    const rows = json.table.rows;
-    const result = [];
-    rows.forEach(row => {
-        const c = row.c;
-        if (!c  !c[0]  !c[0].v) return;
-        const dateVal = c[0].v;
-        let dateStr = '';
-        if (typeof dateVal === 'string' && dateVal.startsWith('Date(')) {
-            const parts = dateVal.replace('Date(','').replace(')','').split(',');
-            const d = String(parts[2]).padStart(2,'0');
-            const m = String(parseInt(parts[1])+1).padStart(2,'0');
-            dateStr = '${d}.${m}.${parts[0]}';
-        } else {
-            dateStr = dateVal;
-        }
-        result.push({
-            date: dateStr,
-            calories: c[1] ? (c[1].v || 0) : 0,
-            distance: c[2] ? (c[2].v || 0) : 0,
-            steps:    c[3] ? (c[3].v || 0) : 0,
-            fat:      c[4] ? (c[4].v || 0) : 0
-        });
-    });
-    return result;
-}
 
         function renderCharts(data) {
 
