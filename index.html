@@ -274,9 +274,15 @@
    
 
     function parseDate(str) {
+    if (!str) return new Date('invalid');
+    // Формат DD.MM.YYYY
+    if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
         const parts = str.split('.');
         return new Date(parts[2], parts[1] - 1, parts[0]);
     }
+    // Любой другой формат — пробуем напрямую
+    return new Date(str);
+}
 
     if (data.length === 0) {
         return;
