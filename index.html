@@ -167,44 +167,10 @@
     </nav>
 
     <script>
-        const MONTHS_CONFIG = [
-            {
-                name: 'Март',
-                data: [
-                    { date: '01.03.2026', calories: 553, distance: 5, steps: 8868,  fat: 72 },
-                    { date: '02.03.2026', calories: 544, distance: 7, steps: 13162, fat: 71 },
-                    { date: '03.03.2026', calories: 484, distance: 7, steps: 11785, fat: 63 },
-                    { date: '04.03.2026', calories: 505, distance: 7, steps: 12311, fat: 66 },
-                    { date: '05.03.2026', calories: 401, distance: 5, steps: 9764,  fat: 52 },
-                    { date: '06.03.2026', calories: 469, distance: 6, steps: 11396, fat: 61 },
-                    { date: '07.03.2026', calories: 506, distance: 7, steps: 12078, fat: 66 },
-                    { date: '08.03.2026', calories: 664, distance: 9, steps: 16419, fat: 86 },
-                    { date: '09.03.2026', calories: 372, distance: 5, steps: 9000,  fat: 48 },
-                    { date: '10.03.2026', calories: 482, distance: 7, steps: 11709, fat: 63 },
-                    { date: '11.03.2026', calories: 0,   distance: 0, steps: 2,     fat: 0  },
-                    { date: '12.03.2026', calories: 370, distance: 5, steps: 9070,  fat: 48 },
-                    { date: '13.03.2026', calories: 585, distance: 8, steps: 14088, fat: 76 },
-                    { date: '14.03.2026', calories: 731, distance: 10,steps: 17974, fat: 95 },
-                    { date: '15.03.2026', calories: 535, distance: 7, steps: 13068, fat: 70 },
-                    { date: '16.03.2026', calories: 586, distance: 8, steps: 142,   fat: 76 },
-                    { date: '17.03.2026', calories: 442, distance: 6, steps: 10880, fat: 57 },
-                    { date: '18.03.2026', calories: 573, distance: 8, steps: 14025, fat: 74 },
-                    { date: '19.03.2026', calories: 568, distance: 8, steps: 13876, fat: 74 },
-                    { date: '20.03.2026', calories: 530, distance: 7, steps: 12979, fat: 69 },
-                    { date: '21.03.2026', calories: 393, distance: 5, steps: 9645,  fat: 51 },
-                    { date: '22.03.2026', calories: 616, distance: 9, steps: 15135, fat: 80 },
-                    { date: '23.03.2026', calories: 518, distance: 7, steps: 12684, fat: 67 },
-                    { date: '24.03.2026', calories: 363, distance: 5, steps: 8885,  fat: 47 },
-                    { date: '25.03.2026', calories: 488, distance: 7, steps: 11880, fat: 63 },
-                    { date: '26.03.2026', calories: 375, distance: 5, steps: 9175,  fat: 49 },
-                    { date: '27.03.2026', calories: 642, distance: 9, steps: 15680, fat: 83 },
-                    { date: '28.03.2026', calories: 463, distance: 6, steps: 11344, fat: 60 },
-                    { date: '29.03.2026', calories: 428, distance: 6, steps: 10304, fat: 56 },
-                    { date: '30.03.2026', calories: 528, distance: 7, steps: 12887, fat: 69 },
-                    { date: '31.03.2026', calories: 577, distance: 8, steps: 14163, fat: 75 },
-                ]
-            }
-        ];
+        // Apps Script ссылка — берет данные из всех листов Google Sheets автоматически
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbws8PUF_sxs-RCo1uHAN0oDISEYGLDqzUijL1dXCCpb6WLQqQgQOttyEGCdAH1zTtk5rQ/exec';
+
+        let MONTHS_CONFIG = []; // заполняется автоматически из Google Sheets
 
         let currentCharts = {};
 
@@ -217,14 +183,56 @@
         };
 
         async function init() {
-            createTabs();
             window.addEventListener('online', updateStatus);
             window.addEventListener('offline', updateStatus);
-            loadMonth(0);
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const json = await response.json();
+
+                // json: { "Март": [{date,calories,...}], "Апрель": [...] }
+                MONTHS_CONFIG = Object.keys(json).map(sheetName => ({
+                    name: sheetName,
+                    data: json[sheetName].map(row => ({
+                        date:     formatDate(row.date),
+                        calories: Number(row.calories) || 0,
+                        distance: Number(row.distance) || 0,
+                        steps:    Number(row.steps)    || 0,
+                        fat:      Number(row.fat)      || 0
+                    }))
+                }));
+
+                createTabs();
+                if (MONTHS_CONFIG.length > 0) loadMonth(0);
+
+            } catch (err) {
+                console.error("Ошибка загрузки:", err);
+                document.getElementById('connection-status').innerText = "ERROR";
+                document.getElementById('connection-status').style.borderColor = "red";
+            }
+        }
+
+        function formatDate(val) {
+            if (!val) return '';
+            // Если это объект Date (Apps Script передаёт даты как объекты)
+            if (val instanceof Date || (typeof val === 'object' && val !== null)) {
+                try {
+                    const d = new Date(val);
+                    return `${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+                } catch(e) {}
+            }
+            // Если число (серийная дата Google Sheets)
+            if (typeof val === 'number') {
+                const d = new Date((val - 25569) * 86400 * 1000);
+                return `${String(d.getUTCDate()).padStart(2,'0')}.${String(d.getUTCMonth()+1).padStart(2,'0')}.${d.getUTCFullYear()}`;
+            }
+            // Уже строка типа "01.03.2026"
+            return String(val);
         }
 
         function createTabs() {
             const container = document.getElementById('monthTabs');
+            container.innerHTML = '';
             MONTHS_CONFIG.forEach((m, index) => {
                 const btn = document.createElement('button');
                 btn.className = `tab ${index === 0 ? 'active' : ''}`;
@@ -243,7 +251,7 @@
             const offlineOverlay = document.getElementById('offline-mode');
             if (navigator.onLine) {
                 status.innerText = "ONLINE";
-               status.style.borderColor = "#00f2ff";
+                status.style.borderColor = "#00f2ff";
                 offlineOverlay.style.display = 'none';
             } else {
                 status.innerText = "OFFLINE";
@@ -253,8 +261,8 @@
         }
 
         async function loadMonth(index) {
-            const monthData = MONTHS_CONFIG[index];
-            if (monthData) renderCharts(monthData.data);
+            const month = MONTHS_CONFIG[index];
+            if (month) renderCharts(month.data);
         }
 
         function renderCharts(data) {
